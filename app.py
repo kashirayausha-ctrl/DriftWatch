@@ -104,7 +104,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 selected = feature_results.loc[feature_results["Feature"] == feature]
 if not selected.empty:
-    st.json(selected.iloc[0].replace({np.nan: None}).to_dict())
+    st.dataframe(selected, use_container_width=True, hide_index=True)
 
 st.subheader("3. Model-error monitoring")
 error_adwin = exp["error_adwin"]
