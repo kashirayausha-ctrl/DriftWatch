@@ -39,7 +39,7 @@ if st.button("Run drift experiment", type="primary"):
             psi_threshold=float(psi_threshold), alpha=float(alpha)
         )
         error_stream = results["error_stream"]
-        error_adwin = adwin_test(error_stream, split)
+        error_adwin = adwin_test(error_stream, results["error_split"])
         st.session_state["experiment"] = {
             "X": X_changed, "y": y_changed, "split": split,
             "results": results, "feature_results": feature_results,
