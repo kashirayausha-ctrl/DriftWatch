@@ -37,7 +37,7 @@ def inject_drift(X, y, start, drift_type, strength=1.0, random_state=42):
         # Flip a controlled fraction of labels to alter P(y|x), while keeping
         # the feature distributions unchanged.
         flip_probability = min(0.45, 0.15 * strength)
-        indices = np.flatnonzero(tail.to_numpy())
+        indices = np.flatnonzero(tail)
         flip_count = int(len(indices) * flip_probability)
         if flip_count:
             selected = rng.choice(indices, size=flip_count, replace=False)
