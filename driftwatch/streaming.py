@@ -201,7 +201,7 @@ class StreamingDriftMonitor:
         self._events.append(event)
         if len(self._events) > self.max_events:
             self._events.popleft()
-        return dict(event)
+        return event
 
     def update(
         self,
@@ -237,7 +237,10 @@ class StreamingDriftMonitor:
             self._current_samples_seen - self.current_window_size
         ) % self.check_interval == 0:
             emitted.extend(self._evaluate(sample_index, stamp))
-        return emitted
+
+        # Return detached snapshots only after all same-update enrichment is
+        # complete, so an online alert can include later window metrics.
+        return [dict(event) for event in emitted]
 
     def _evaluate(self, sample_index: int, timestamp: str) -> list[dict[str, Any]]:
         emitted: list[dict[str, Any]] = []
