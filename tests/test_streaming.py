@@ -107,3 +107,54 @@ def test_monitor_validates_configuration():
         StreamingDriftMonitor(current_window_size=1)
     with pytest.raises(ValueError):
         StreamingDriftMonitor(check_interval=0)
+
+
+
+def test_page_hinkley_detects_abrupt_mean_shift_online():
+    monitor = StreamingDriftMonitor(
+        reference_window_size=100,
+        current_window_size=100,
+        enable_adwin=False,
+        enable_page_hinkley=True,
+        page_hinkley_delta=0.0,
+        page_hinkley_threshold=5.0,
+    )
+    _feed(monitor, np.zeros(100))
+    events = _feed(monitor, np.full(20, 3.0), start_index=100)
+    assert events
+    assert events[0]["feature"] == "signal"
+    assert "Page-Hinkley" in events[0]["detectors"]
+
+
+def test_adwin_detects_abrupt_change_when_river_is_available():
+    from driftwatch.streaming import ADWIN
+
+    if ADWIN is None:
+        pytest.skip("River is not installed; ADWIN is optional at runtime.")
+
+    monitor = StreamingDriftMonitor(
+        reference_window_size=200,
+        current_window_size=200,
+        enable_adwin=True,
+        adwin_delta=0.01,
+        enable_page_hinkley=False,
+    )
+    _feed(monitor, np.zeros(200))
+    events = _feed(monitor, np.full(200, 10.0), start_index=200)
+    assert events
+    assert any("ADWIN" in event["detectors"] for event in events)
+
+
+def test_online_detectors_can_be_disabled_independently():
+    monitor = StreamingDriftMonitor(
+        reference_window_size=10,
+        current_window_size=5,
+        enable_adwin=False,
+        enable_page_hinkley=False,
+    )
+    _feed(monitor, np.zeros(10))
+    _feed(monitor, np.ones(20), start_index=10)
+    assert monitor.snapshot()["online_detectors"] == {
+        "adwin": False,
+        "page_hinkley": False,
+    }
