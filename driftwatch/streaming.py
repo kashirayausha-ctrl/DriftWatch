@@ -32,9 +32,9 @@ class StreamingDriftMonitor:
         ks_alpha: float = 0.05,
         max_events: int = 500,
         features: Sequence[str] | None = None,
-        enable_adwin: bool = True,
+        enable_adwin: bool = False,
         adwin_delta: float = 0.002,
-        enable_page_hinkley: bool = True,
+        enable_page_hinkley: bool = False,
         page_hinkley_delta: float = 0.005,
         page_hinkley_threshold: float = 5.0,
     ) -> None:
