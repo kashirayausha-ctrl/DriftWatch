@@ -280,11 +280,10 @@ class StreamingDriftMonitor:
                     # same update. Enrich that event with window-based metrics
                     # rather than emitting a duplicate alert.
                     for event in reversed(self._events):
-                        if (
-                            event["feature"] == feature
-                            and event["sample_index"] == sample_index
-                        ):
+                        if event["feature"] == feature and event["decision"] == "Drift":
                             event.update(metrics)
+                            event["metrics_timestamp"] = timestamp
+                            event["metrics_sample_index"] = sample_index
                             event["detectors"] = list(dict.fromkeys(
                                 event["detectors"] + detectors
                             ))
