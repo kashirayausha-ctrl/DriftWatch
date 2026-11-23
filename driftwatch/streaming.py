@@ -260,20 +260,35 @@ class StreamingDriftMonitor:
             was_drifting = self._drift_state.get(feature, False)
             self._drift_state[feature] = drift_detected
 
-            if drift_detected and not was_drifting:
+            if drift_detected:
                 detectors = [
                     name for name, detected in (("PSI", psi_drift), ("KS", ks_drift))
                     if detected
                 ]
-                emitted.append(self._record_event(
-                    feature, sample_index, timestamp, detectors,
-                    {
-                        "psi": float(psi),
-                        "ks_statistic": float(ks_statistic),
-                        "ks_p_value": float(ks_p_value),
-                        "wasserstein_distance": float(wasserstein),
-                    },
-                ))
+                metrics = {
+                    "psi": float(psi),
+                    "ks_statistic": float(ks_statistic),
+                    "ks_p_value": float(ks_p_value),
+                    "wasserstein_distance": float(wasserstein),
+                }
+                if not was_drifting:
+                    emitted.append(self._record_event(
+                        feature, sample_index, timestamp, detectors, metrics
+                    ))
+                else:
+                    # An online detector may raise the alert earlier in this
+                    # same update. Enrich that event with window-based metrics
+                    # rather than emitting a duplicate alert.
+                    for event in reversed(self._events):
+                        if (
+                            event["feature"] == feature
+                            and event["sample_index"] == sample_index
+                        ):
+                            event.update(metrics)
+                            event["detectors"] = list(dict.fromkeys(
+                                event["detectors"] + detectors
+                            ))
+                            break
         return emitted
 
     @property
