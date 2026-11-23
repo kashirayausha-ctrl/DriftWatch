@@ -23,7 +23,7 @@ def test_monitor_waits_for_reference_and_current_windows():
         check_interval=5,
         psi_threshold=0.2,
     )
-    assert monitor.update({"signal": 1.0}) == []
+    assert monitor.update({"signal": 0.0}) == []
     _feed(monitor, np.zeros(19))
     assert monitor.snapshot()["reference_samples"] == 20
     assert monitor.snapshot()["current_samples"] == 0
