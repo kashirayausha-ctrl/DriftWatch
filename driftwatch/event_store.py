@@ -91,16 +91,18 @@ class DriftEventStore:
             for event in normalized
         ]
         with self._connect() as connection:
-            cursor = connection.executemany(
-                """
-                INSERT INTO drift_events
-                    (event_id, timestamp, feature, decision, severity, payload)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                rows,
-            )
-            first_id = cursor.lastrowid - len(rows) + 1
-            return list(range(first_id, first_id + len(rows)))
+            storage_ids = []
+            for row in rows:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO drift_events
+                        (event_id, timestamp, feature, decision, severity, payload)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    row,
+                )
+                storage_ids.append(int(cursor.lastrowid))
+            return storage_ids
 
     def query(
         self,
